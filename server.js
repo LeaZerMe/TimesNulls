@@ -15,46 +15,73 @@ const defaultArr = [{id: 1, title: ""},{id: 2, title: ""},{id: 3, title: ""},
 ];
 
 let usersList = {},
-roomList = {s: {
-	queue: "X",
-	next: "";
-}};
+freeRooms = [],
+roomList = {};
 
 websocket.on('connection', (socket) => {
 	console.log('A client just joined on', socket.id);
 	usersList[socket.id] = {id: socket.id}; 
 
 	socket.on('step', (data) => {
-		if(roomList.s.queue == "X") {
-			roomList.s.queue = "O"
+		if(roomList[usersList[socket.id].room].queue == "X") {
+			roomList[usersList[socket.id].room].queue = "O"
 		} else {
-			roomList.s.queue = "X"
+			roomList[usersList[socket.id].room].queue = "X"
 		}
 
 		if(data == 'end') {
 			websocket.to(usersList[socket.id].room).emit('endGame', defaultArr);
 			return;
 		}
-		websocket.to(usersList[socket.id].room).emit('callbackBoutStep', data)
+
+		let nameOfNext;
+		if(usersList[roomList[usersList[socket.id].room].users[0]].name != roomList[usersList[socket.id].room].next) {
+			nameOfNext = usersList[roomList[usersList[socket.id].room].users[0]].name;
+			roomList[usersList[socket.id].room].next = usersList[roomList[usersList[socket.id].room].users[0]].name;
+		} else {
+			nameOfNext = usersList[roomList[usersList[socket.id].room].users[1]].name;
+			roomList[usersList[socket.id].room].next = usersList[roomList[usersList[socket.id].room].users[1]].name;
+		}
+
+		websocket.to(usersList[socket.id].room).emit('callbackBoutStep', data, roomList[usersList[socket.id].room].queue, nameOfNext)
 	})
 
 	socket.on('alertAboutEnd', (data) => {
-		websocket.to('s').emit('animIt', data)
+		websocket.to(usersList[socket.id].room).emit('animIt', data)
 	})
 
-	socket.on('startGame', () => {
-		let id = uuid.v4();
-		usersList[socket.id].room = id;
-		
-		roomList[id] = {name: id, users: [], gameStarted: false};
-		roomList[id].users.push(socket.id);
-		if()
-		socket.join(id);
+	socket.on('startSeekGame', (name) => {
+		if(!freeRooms.length) {
+			let id = uuid.v4();
+			usersList[socket.id].room = id;
+			usersList[socket.id].name = name;
+			freeRooms.push(id);
+
+			roomList[id] = {name: id, users: [], gameStarted: false, next: "", queue: "X"};
+			roomList[id].users.push(socket.id);
+			socket.join(id);
+		} else {
+			let id = freeRooms.shift();
+			usersList[socket.id].room = id;
+			usersList[socket.id].name = name;
+
+			roomList[id].gameStarted = true;
+			roomList[id].users.push(socket.id);
+			roomList[id].next = roomList[id].users[(Math.random().toFixed(0))];
+
+			socket.join(id);
+			websocket.to(usersList[socket.id].room).emit('startGame', name);
+		}		
 	})
 
-	socket.on('cancelGame', () => {
+	socket.on('cancelSeekGame', () => {
 		socket.leave(usersList[socket.id].room);
-		delete roomList[usersList[socket.id].room];
+
+		if(roomList[usersList[socket.id].room].users[0] == socket.id) {
+			freeRooms.splice(freeRooms.indexOf(usersList[socket.id].room), 1);
+			delete roomList[usersList[socket.id].room];
+			console.log(freeRooms)
+		}
 	})
 });
 
