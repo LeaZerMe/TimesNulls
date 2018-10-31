@@ -20,6 +20,9 @@ export default class StartingComponent extends React.Component {
     this.props.socket.emit('cancelSeekGame');
   }
 
+  startOffline() {
+    this.props.botOn();
+  }
 
   render() {
     if(this.state.seeking) {
@@ -54,7 +57,11 @@ export default class StartingComponent extends React.Component {
           ></TextInput>
 
         <TouchableOpacity onPress={this.start.bind(this)} style={styles.buttonContainer}>
-        <Text style={styles.buttonText}>Save & Start</Text>
+          <Text style={styles.buttonText}>Save & Start</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={this.startOffline.bind(this)} style={styles.buttonContainer}>
+          <Text style={styles.buttonText}>Play offline</Text>
         </TouchableOpacity>
         </View>)
     }
@@ -74,7 +81,8 @@ const styles = StyleSheet.create({
   },
   buttonContainer:{
     backgroundColor: '#2980b6',
-    padding: 15
+    padding: 15,
+    marginBottom: 10
   },
   buttonText:{
     color: '#fff',

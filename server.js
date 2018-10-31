@@ -46,8 +46,8 @@ websocket.on('connection', (socket) => {
 		websocket.to(usersList[socket.id].room).emit('callbackBoutStep', data, roomList[usersList[socket.id].room].queue, nameOfNext)
 	})
 
-	socket.on('alertAboutEnd', (data) => {
-		websocket.to(usersList[socket.id].room).emit('animIt', data)
+	socket.on('alertAboutEnd', (data, obj) => {
+		websocket.to(usersList[socket.id].room).emit('animIt', data, obj)
 	})
 
 	socket.on('startSeekGame', (name) => {
@@ -80,7 +80,6 @@ websocket.on('connection', (socket) => {
 		if(roomList[usersList[socket.id].room].users[0] == socket.id) {
 			freeRooms.splice(freeRooms.indexOf(usersList[socket.id].room), 1);
 			delete roomList[usersList[socket.id].room];
-			console.log(freeRooms)
 		}
 	})
 });
