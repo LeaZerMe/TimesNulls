@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, View, Alert, FlatList, Animated, Button } from 'react-native';
+import { StyleSheet, Text, View, Alert, FlatList, Animated, TouchableOpacity, BackHandler, AsyncStorage } from 'react-native';
 import Cell from './Cell.js';
 import SocketIOClient from 'socket.io-client';
 import StartingComponent from './StartingComponent.js'
@@ -22,7 +22,6 @@ export default class App extends React.Component {
     this.textFadeVal = new Animated.Value(0);
     this.name = "";
     this.playingOffline = false;
-    this.playersPositions = {};
 
     this.state = {
       field: [{id: 1, title: ""},{id: 2, title: ""},{id: 3, title: ""},
@@ -42,9 +41,23 @@ export default class App extends React.Component {
     this.answerName = this.answerName.bind(this);
     this.startOffline = this.startOffline.bind(this);
     this.botMakeStep = this.botMakeStep.bind(this);
+    this.comeBack = this.comeBack.bind(this);
+    this.goBack = this.goBack.bind(this);
+  }
+
+  goBack() {
+
+        if(this.state.readyPlay) {
+          this.comeBack();
+          return true;
+        }
+        
+        return false;
   }
 
   componentDidMount() {
+    BackHandler.addEventListener('hardwareBackPress', this.goBack);
+
     this.socket.on('callbackBoutStep', (data, queue, name) => {
       this.setState({field: data, queue: queue, next: name});
     });
@@ -60,10 +73,33 @@ export default class App extends React.Component {
     this.socket.on('startGame', (name) => {
       this.setState({readyPlay: true, next: name});
     })
+
+    this.socket.on('leaveGame', (obj) => {
+      this.fadeVal = new Animated.Value(0);
+      this.textFadeVal = new Animated.Value(0);
+      this.setState({readyPlay: false, next: "", field: obj, queue: "X"});
+      console.log(this.state.readyPlay)
+    })
   }
+
+  
 
   answerName(name) {
     this.name = name;
+    AsyncStorage.setItem("name", name);
+  }
+
+  comeBack() {
+    this.fadeVal = new Animated.Value(0);
+    this.textFadeVal = new Animated.Value(0);
+    this.socket.emit('leaveGame');
+    if(this.playingOffline) {
+      this.playingOffline = false;   
+      this.setState({readyPlay: false, field: [{id: 1, title: ""},{id: 2, title: ""},{id: 3, title: ""},
+        {id: 4, title: ""},{id: 5, title: ""},{id: 6, title: ""},
+        {id: 7, title: ""},{id: 8, title: ""},{id: 9, title: ""}
+        ], queue: "X"})
+    }
   }
 
   startOffline() {
@@ -76,20 +112,16 @@ export default class App extends React.Component {
       next = 'Bot';
     }
 
-    this.playersPositions["You"] = [];
-    this.playersPositions["Bot"] = [];
-
-    this.name = "You";
     this.playingOffline = true;
     this.setState({readyPlay: true, next: next});
 
     if(next == "Bot") {
+      this.setState({disablePlay: true})
       setTimeout(() => {
         this.setState({next: "You", field: [{id: 1, title: ""},{id: 2, title: ""},{id: 3, title: ""},
           {id: 4, title: ""},{id: 5, title: "X"},{id: 6, title: ""},
           {id: 7, title: ""},{id: 8, title: ""},{id: 9, title: ""}
-          ], queue: 'O'});
-        this.playersPositions["Bot"].push(5);
+          ], queue: 'O', disablePlay: false});
       }, 1000);
     } 
   }
@@ -113,10 +145,10 @@ export default class App extends React.Component {
       }     
     })
 
-    this.setState({field: obj, next: "Bot", botMake: true})
+    this.setState({field: obj, next: "Bot", botMake: true, disablePlay: true})
 
     setTimeout(() => {
-      this.checkStep(false, a);
+      this.checkStep(false, a, "bot");
     }, 500)
   }
 
@@ -149,14 +181,14 @@ export default class App extends React.Component {
     if(this.playingOffline) {
       setTimeout(() => {this.setState({msgTxt: ""}); this.setState({field: defaultArr, queue: "X"}); this.setState({disablePlay: false});}, 3000);
     }
-    setTimeout(() => {this.setState({msgTxt: "", disablePlay: false, botMake: false}); this.socket.emit('step', "end"); this.startOffline()}, 3000);
+    setTimeout(() => {this.setState({msgTxt: "", disablePlay: false, botMake: false}); this.socket.emit('step', "end"); if(this.playingOffline) this.startOffline()}, 3000);
   }
 
   render() {
     if(!this.state.readyPlay) {
       return (
         <View key="main" style={styles.container}>        
-        <StartingComponent botOn={this.startOffline} socket={this.socket} answerName={this.answerName}></StartingComponent>
+        <StartingComponent botOn={this.startOffline} socket={this.socket} answerName={this.answerName} name={this.name}></StartingComponent>
         </View>
         );
     } else {
@@ -172,6 +204,7 @@ export default class App extends React.Component {
 
       return (
         <View key="main" style={styles.container}>        
+        <View style={styles.playingField}>
         <Text key="titleText" style={styles.title}>Chrest Nulls</Text>
         <Animated.Text key="messageText" style={[styles.message, {opacity: txtOpacity}]}>{this.state.msgTxt}</Animated.Text>
 
@@ -183,17 +216,18 @@ export default class App extends React.Component {
         keyExtractor={({item}, index) => index}
         numColumns={3}
         />
-        <Text style={styles.queue}>Next step: {this.state.next}, {this.state.queue}</Text>
+        <Animated.Text style={[styles.queue, {opacity: opacity}]}>Next step: {this.state.next}, {this.state.queue}</Animated.Text>  
+        </View>  
         </View>
         );
     }
   }
 
-  checkStep(num, obj) {
+  checkStep(num, obj, player) {
     let success = true;
     let a = [];
 
-    if(this.state.disablePlay) return;
+    if(this.state.disablePlay && player != "bot") return;
 
     if(!this.playingOffline) {
       if(this.state.next != this.name) return;
@@ -223,7 +257,6 @@ export default class App extends React.Component {
 
         a.push(e);
       })
-      this.playersPositions["You"].push(num);
     } else {
       a = obj;
     }
@@ -235,7 +268,7 @@ export default class App extends React.Component {
      if(this.playingOffline) {
       this.startFade("X");
     } else {
-      this.socket.emit('alertAboutEnd', "X")
+      this.socket.emit('alertAboutEnd', "X", a)
     }
     return;
   } else if(a[0].title == "X" && a[3].title == "X" && a[6].title == "X") {
@@ -243,7 +276,7 @@ export default class App extends React.Component {
    if(this.playingOffline) {
     this.startFade("X");
   } else {
-    this.socket.emit('alertAboutEnd', "X")
+    this.socket.emit('alertAboutEnd', "X", a)
   }   
   return;
 } else if(a[1].title == "X" && a[4].title == "X" && a[7].title == "X") {
@@ -251,42 +284,42 @@ export default class App extends React.Component {
  if(this.playingOffline) {
   this.startFade("X");
 } else {
-  this.socket.emit('alertAboutEnd', "X")
+  this.socket.emit('alertAboutEnd', "X", a)
 }   return;
 } else if(a[2].title == "X" && a[5].title == "X" && a[8].title == "X") {
  this.setState({field: a});
  if(this.playingOffline) {
   this.startFade("X");
 } else {
-  this.socket.emit('alertAboutEnd', "X")
+  this.socket.emit('alertAboutEnd', "X", a)
 }   return;
 } else if(a[3].title == "X" && a[4].title == "X" && a[5].title == "X") {
  this.setState({field: a});
  if(this.playingOffline) {
   this.startFade("X");
 } else {
-  this.socket.emit('alertAboutEnd', "X")
+  this.socket.emit('alertAboutEnd', "X", a)
 }   return;
 } else if(a[6].title == "X" && a[7].title == "X" && a[8].title == "X") {
  this.setState({field: a});
  if(this.playingOffline) {
   this.startFade("X");
 } else {
-  this.socket.emit('alertAboutEnd', "X")
+  this.socket.emit('alertAboutEnd', "X", a)
 }   return;
 } else if(a[0].title == "X" && a[4].title == "X" && a[8].title == "X") {
  this.setState({field: a});
  if(this.playingOffline) {
   this.startFade("X");
 } else {
-  this.socket.emit('alertAboutEnd', "X")
+  this.socket.emit('alertAboutEnd', "X", a)
 }   return;
 } else if(a[6].title == "X" && a[4].title == "X" && a[2].title == "X") {
  this.setState({field: a});
  if(this.playingOffline) {
   this.startFade("X");
 } else {
-  this.socket.emit('alertAboutEnd', "X")
+  this.socket.emit('alertAboutEnd', "X", a)
 }   return;
 }
 
@@ -295,56 +328,56 @@ if(a[0].title == "O" && a[1].title == "O" && a[2].title == "O") {
  if(this.playingOffline) {
   this.startFade("O");
 } else {
-  this.socket.emit('alertAboutEnd', "O")
+  this.socket.emit('alertAboutEnd', "O", a)
 }  return;
 } else if(a[0].title == "O" && a[3].title == "O" && a[6].title == "O") {
  this.setState({field: a});
  if(this.playingOffline) {
   this.startFade("O");
 } else {
-  this.socket.emit('alertAboutEnd', "O")
+  this.socket.emit('alertAboutEnd', "O", a)
 }  return;
 } else if(a[1].title == "O" && a[4].title == "O" && a[7].title == "O") {
  this.setState({field: a});
  if(this.playingOffline) {
   this.startFade("O");
 } else {
-  this.socket.emit('alertAboutEnd', "O")
+  this.socket.emit('alertAboutEnd', "O", a)
 }  return;
 } else if(a[2].title == "O" && a[5].title == "O" && a[8].title == "O") {
  this.setState({field: a});
  if(this.playingOffline) {
   this.startFade("O");
 } else {
-  this.socket.emit('alertAboutEnd', "O")
+  this.socket.emit('alertAboutEnd', "O", a)
 }  return;
 } else if(a[3].title == "O" && a[4].title == "O" && a[5].title == "O") {
  this.setState({field: a});
  if(this.playingOffline) {
   this.startFade("O");
 } else {
-  this.socket.emit('alertAboutEnd', "O")
+  this.socket.emit('alertAboutEnd', "O", a)
 }  return;
 } else if(a[6].title == "O" && a[7].title == "O" && a[8].title == "O") {
  this.setState({field: a});
  if(this.playingOffline) {
   this.startFade("O");
 } else {
-  this.socket.emit('alertAboutEnd', "O")
+  this.socket.emit('alertAboutEnd', "O", a)
 }  return;
 } else if(a[0].title == "O" && a[4].title == "O" && a[8].title == "O") {
  this.setState({field: a});
  if(this.playingOffline) {
   this.startFade("O");
 } else {
-  this.socket.emit('alertAboutEnd', "O")
+  this.socket.emit('alertAboutEnd', "O", a)
 }  return;
 } else if(a[6].title == "O" && a[4].title == "O" && a[2].title == "O") {
  this.setState({field: a});
  if(this.playingOffline) {
   this.startFade("O");
 } else {
-  this.socket.emit('alertAboutEnd', "O")
+  this.socket.emit('alertAboutEnd', "O", a)
 }  return;
 }
 
@@ -365,7 +398,7 @@ if(this.state.queue == "X") {
 
 if(this.playingOffline) {
   if(this.state.botMake) {
-    this.setState({field: a, botMake: false, next: "You"})
+    this.setState({field: a, botMake: false, next: "You", disablePlay: false})
   } else {
     this.botMakeStep(a);
   }
@@ -377,25 +410,41 @@ if(this.playingOffline) {
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: 50,
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#252129',
     alignItems: 'center',
     justifyContent: 'center',
   },
+  playingField: {
+    marginTop: 40
+  },
   title: {
+    textAlign: "center",
+    color: "#fff",
     marginBottom: 40,
     fontSize: 30
   },
   message: {
     marginBottom: 20,
     fontSize: 30,
-    color: "#141",
-    fontWeight: '600'
+    color: "#fff",
+    fontWeight: '600',
+    textAlign: "center"
   },
   queue: {
-    marginBottom: 30,
+    marginBottom: 60,
     fontSize: 30,
-    color: "#141"
+    color: "#fff",
+    textAlign: "center"
+  },
+  exitBtn: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    backgroundColor: "#fff",
+    padding: 7,
+    paddingVertical: 7,
+    margin: 7,
+    borderRadius: 50
   }
 });

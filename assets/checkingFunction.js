@@ -41,107 +41,107 @@ function recursionChecking(a, symbol, bool) {
 				}
 			})
 
-			if(a.filter((e) => e.title == "X").length == 1) {
+			if(a.filter((e) => e.title == "X").length == 1 || !notEmptyCellsBot.length) {
 				let random;
-				while (true) {
-					random = (Math.random() * 9).toFixed();
-					if(random != 9) {
+
+				while(true) {
+					random = Math.floor(Math.random() * 9) + 1;
+					if(emptyCells.indexOf(random) != -1) {
 						break;
 					}
 				}
-				
-				if (random == 0) {
-					random == 1;
-				}
-
 				return random;
 			}
 
-			notEmptyCellsBot.forEach((index) => {
-				if(index == 1) {
-					if(emptyCells.indexOf(index + 1) != -1) {
-						willReturnedValue = index + 1;
-					} else if(emptyCells.indexOf(index + 3) != -1) {
-						willReturnedValue = index + 3;
-					} else if(emptyCells.indexOf(index + 4) != -1) {
-						willReturnedValue = index + 4;
+			function findBetterMove() {
+				notEmptyCellsBot.forEach((index) => {
+					if(index == 1) {
+						if(emptyCells.indexOf(index + 1) != -1) {
+							willReturnedValue = index + 1;
+						} else if(emptyCells.indexOf(index + 3) != -1) {
+							willReturnedValue = index + 3;
+						} else if(emptyCells.indexOf(index + 4) != -1) {
+							willReturnedValue = index + 4;
+						}
+					} else if (index == 2) {
+						if(emptyCells.indexOf(index - 1) != -1) {
+							willReturnedValue = index - 1;
+						} else if(emptyCells.indexOf(index + 3) != -1) {
+							willReturnedValue = index + 3;
+						} else if(emptyCells.indexOf(index + 1) != -1) {
+							willReturnedValue = index + 1;
+						}
+					} else if (index == 3) {
+						if(emptyCells.indexOf(index - 1) != -1) {
+							willReturnedValue = index - 1;
+						} else if(emptyCells.indexOf(index + 3) != -1) {
+							willReturnedValue = index + 3;
+						} else if(emptyCells.indexOf(index + 2) != -1) {
+							willReturnedValue = index + 2;
+						}
+					} else if (index == 4) {
+						if(emptyCells.indexOf(index - 3) != -1) {
+							willReturnedValue = index - 3;
+						} else if(emptyCells.indexOf(index + 3) != -1) {
+							willReturnedValue = index + 3;
+						} else if(emptyCells.indexOf(index + 1) != -1) {
+							willReturnedValue = index + 1;
+						}
+					} else if (index == 5) {
+						if(emptyCells.indexOf(index - 1) != -1) {
+							willReturnedValue = index - 1;
+						} else if(emptyCells.indexOf(index + 3) != -1) {
+							willReturnedValue = index + 3;
+						} else if(emptyCells.indexOf(index + 2) != -1) {
+							willReturnedValue = index + 2;
+						}  else if(emptyCells.indexOf(index - 3) != -1) {
+							willReturnedValue = index - 3;
+						} else if(emptyCells.indexOf(index + 1) != -1) {
+							willReturnedValue = index + 1;
+						} else if(emptyCells.indexOf(index - 2) != -1) {
+							willReturnedValue = index - 2;
+						} else if(emptyCells.indexOf(index + 4) != -1) {
+							willReturnedValue = index + 4;
+						} else if(emptyCells.indexOf(index -4) != -1) {
+							willReturnedValue = index -4;
+						} 
+					} else if(index == 6) {
+						if(emptyCells.indexOf(index - 3) != -1) {
+							willReturnedValue = index - 3;
+						} else if(emptyCells.indexOf(index + 3) != -1) {
+							willReturnedValue = index + 3;
+						} else if(emptyCells.indexOf(index - 1) != -1) {
+							willReturnedValue = index - 1;
+						}
+					} else if (index == 7) {
+						if(emptyCells.indexOf(index + 1) != -1) {
+							willReturnedValue = index + 1;
+						} else if(emptyCells.indexOf(index - 3) != -1) {
+							willReturnedValue = index - 3;
+						} else if(emptyCells.indexOf(index - 2) != -1) {
+							willReturnedValue = index - 2;
+						}
+					} else if (index == 8) {
+						if(emptyCells.indexOf(index - 1) != -1) {
+							willReturnedValue = index - 1;
+						} else if(emptyCells.indexOf(index - 3) != -1) {
+							willReturnedValue = index - 3;
+						} else if(emptyCells.indexOf(index + 1) != -1) {
+							willReturnedValue = index + 1;
+						}
+					} else if (index == 9) {
+						if(emptyCells.indexOf(index - 3) != -1) {
+							willReturnedValue = index - 3;
+						} else if(emptyCells.indexOf(index - 1) != -1) {
+							willReturnedValue = index - 1;
+						} else if(emptyCells.indexOf(index - 4) != -1) {
+							willReturnedValue = index - 4;
+						}
 					}
-				} else if (index == 2) {
-					if(emptyCells.indexOf(index - 1) != -1) {
-						willReturnedValue = index - 1;
-					} else if(emptyCells.indexOf(index + 3) != -1) {
-						willReturnedValue = index + 3;
-					} else if(emptyCells.indexOf(index + 1) != -1) {
-						willReturnedValue = index + 1;
-					}
-				} else if (index == 3) {
-					if(emptyCells.indexOf(index - 1) != -1) {
-						willReturnedValue = index - 1;
-					} else if(emptyCells.indexOf(index + 3) != -1) {
-						willReturnedValue = index + 3;
-					} else if(emptyCells.indexOf(index + 2) != -1) {
-						willReturnedValue = index + 2;
-					}
-				} else if (index == 4) {
-					if(emptyCells.indexOf(index - 3) != -1) {
-						willReturnedValue = index - 3;
-					} else if(emptyCells.indexOf(index + 3) != -1) {
-						willReturnedValue = index + 3;
-					} else if(emptyCells.indexOf(index + 1) != -1) {
-						willReturnedValue = index + 1;
-					}
-				} else if (index == 5) {
-					if(emptyCells.indexOf(index - 1) != -1) {
-						willReturnedValue = index - 1;
-					} else if(emptyCells.indexOf(index + 3) != -1) {
-						willReturnedValue = index + 3;
-					} else if(emptyCells.indexOf(index + 2) != -1) {
-						willReturnedValue = index + 2;
-					}  else if(emptyCells.indexOf(index - 3) != -1) {
-						willReturnedValue = index - 3;
-					} else if(emptyCells.indexOf(index + 1) != -1) {
-						willReturnedValue = index + 1;
-					} else if(emptyCells.indexOf(index - 2) != -1) {
-						willReturnedValue = index - 2;
-					} else if(emptyCells.indexOf(index + 4) != -1) {
-						willReturnedValue = index + 4;
-					} else if(emptyCells.indexOf(index -4) != -1) {
-						willReturnedValue = index -4;
-					} 
-				} else if(index == 6) {
-					if(emptyCells.indexOf(index - 3) != -1) {
-						willReturnedValue = index - 3;
-					} else if(emptyCells.indexOf(index + 3) != -1) {
-						willReturnedValue = index + 3;
-					} else if(emptyCells.indexOf(index - 1) != -1) {
-						willReturnedValue = index - 1;
-					}
-				} else if (index == 7) {
-					if(emptyCells.indexOf(index + 1) != -1) {
-						willReturnedValue = index + 1;
-					} else if(emptyCells.indexOf(index - 3) != -1) {
-						willReturnedValue = index - 3;
-					} else if(emptyCells.indexOf(index - 2) != -1) {
-						willReturnedValue = index - 2;
-					}
-				} else if (index == 8) {
-					if(emptyCells.indexOf(index - 1) != -1) {
-						willReturnedValue = index - 1;
-					} else if(emptyCells.indexOf(index - 3) != -1) {
-						willReturnedValue = index - 3;
-					} else if(emptyCells.indexOf(index + 1) != -1) {
-						willReturnedValue = index + 1;
-					}
-				} else if (index == 9) {
-					if(emptyCells.indexOf(index - 3) != -1) {
-						willReturnedValue = index - 3;
-					} else if(emptyCells.indexOf(index - 1) != -1) {
-						willReturnedValue = index - 1;
-					} else if(emptyCells.indexOf(index - 4) != -1) {
-						willReturnedValue = index - 4;
-					}
-				}
-			})
+				})
+			}
+
+			findBetterMove();
 		}
 	}
 

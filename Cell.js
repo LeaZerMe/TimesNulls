@@ -12,7 +12,7 @@ export default class Cell extends React.Component {
                    color='#fff'>
 
                 <View style = {styles.button}>
-                    <Text style={{color: 'white', fontSize: 30, fontWeight: '600', textAlign: 'center'}}>{item.title}</Text>
+                    <Text style={{color: '#000', fontSize: 36, fontWeight: '600', textAlign: 'center'}}>{item.title}</Text>
                 </View>
             </TouchableOpacity>)
 	}
@@ -25,7 +25,7 @@ const styles = StyleSheet.create({
     width: 80,
     borderColor: '#fff',
     borderRadius: 10,
-    backgroundColor: 'black',
+    backgroundColor: '#fff',
     borderWidth: 0.5,
     maxHeight: 80,
     height: 80,

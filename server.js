@@ -82,5 +82,14 @@ websocket.on('connection', (socket) => {
 			delete roomList[usersList[socket.id].room];
 		}
 	})
+
+	socket.on('leaveGame', () => {			
+		websocket.to(usersList[socket.id].room).emit('leaveGame', defaultArr);
+		
+		socket.leave(usersList[socket.id].room);
+		delete roomList[usersList[socket.id].room];	
+		delete usersList[socket.id].room;
+		delete usersList[socket.id].name;
+	})
 });
 
