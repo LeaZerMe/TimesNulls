@@ -6,6 +6,7 @@ import StartingComponent from './StartingComponent.js'
 import checkField from "./assets/checkingFunction.js"
 import { connect } from 'react-redux';
 import { changeName } from './assets/redux/reducer.js'
+import { BoxShadow } from 'react-native-shadow'
 
 const defaultArr = [{id: 1, title: ""},{id: 2, title: ""},{id: 3, title: ""},
 {id: 4, title: ""},{id: 5, title: ""},{id: 6, title: ""},
@@ -19,9 +20,11 @@ class App extends React.Component {
     window.navigator.userAgent = 'ReactNative';
     this.socket = SocketIOClient("http://192.168.1.2:3000");
 
-    this.fadeVal = new Animated.Value(0);
+    this.winTextVal = new Animated.Value(0);
     this.winnerPanelVal = new Animated.Value(300);
+    this.cellsOpacity = new Animated.Value(2);
     this.playingOffline = false;
+    this.winningNumbers = [];
 
     this.state = {
       field: [{id: 1, title: ""},{id: 2, title: ""},{id: 3, title: ""},
@@ -34,7 +37,8 @@ class App extends React.Component {
       next: "",
       disablePlay: false,
       botMake: false,
-      canLeave: true
+      canLeave: true,
+      hideOthers: false
     }
 
     this.checkStep = this.checkStep.bind(this);
@@ -77,10 +81,10 @@ class App extends React.Component {
     })
 
     this.socket.on('leaveGame', (obj) => {
-      this.fadeVal = new Animated.Value(0);
-      this.textFadeVal = new Animated.Value(0);
+      this.winTextVal = new Animated.Value(0);
+      this.winnerPanelVal = new Animated.Value(300);
+      this.cellsOpacity = new Animated.Value(0);
       this.setState({readyPlay: false, next: "", field: obj, queue: "X"});
-      console.log(this.state.readyPlay)
     })
   } 
 
@@ -90,7 +94,6 @@ class App extends React.Component {
   }
 
   comeBack() {
-    this.fadeVal = new Animated.Value(0);
     this.socket.emit('leaveGame');
 
     if(this.playingOffline) {
@@ -154,13 +157,12 @@ class App extends React.Component {
   }
 
   startFade(val, obj) {  
-    console.log(this.winnerPanelVal)
-    this.setState({disablePlay: true, canLeave: false});
+    this.setState({disablePlay: true, canLeave: false, hideOthers: true});
     if(obj) {
       this.setState({field: obj});
     }
 
-    this.fadeVal.setValue(0);
+    this.winTextVal.setValue(0);
     this.winnerPanelVal.setValue(300);
 
     if(val == 'draw') {
@@ -171,22 +173,44 @@ class App extends React.Component {
 
     Animated.timing(
       this.winnerPanelVal,
-      { toValue: 100, duration: 1500 }
-    ).start();
+      { toValue: 80, duration: 1500 }
+      ).start();
 
     Animated.timing(
-      this.fadeVal,
-      { toValue: 1, duration: 4000 }
-    ).start();
+      this.winTextVal,
+      { toValue: -180, duration: 1500 }
+      ).start();
 
-    setTimeout(() => {this.setState({queue: "X"}); Animated.timing(
+    Animated.timing(
+      this.cellsOpacity,
+      { toValue: 0, duration: 2000 }
+      ).start();
+
+    this.setState({canLeave: false})
+
+    setTimeout(() => {this.setState({queue: "X"});
+
+     Animated.timing(
       this.winnerPanelVal,
       { toValue: 300, duration: 1500 }
-    ).start();}, 1500);
+      ).start();
+
+     Animated.timing(
+      this.winTextVal,
+      { toValue: 0, duration: 1500 }
+      ).start();
+
+     Animated.timing(
+      this.cellsOpacity,
+      { toValue: 1, duration: 2000 }
+      ).start();
+
+   }, 1500);
+
     if(this.playingOffline) {
-      setTimeout(() => {this.setState({msgTxt: ""}); this.setState({field: defaultArr, queue: "X"}); this.setState({disablePlay: false});}, 3000);
+      setTimeout(() => {this.setState({msgTxt: ""}); this.setState({field: defaultArr, queue: "X"}); this.setState({disablePlay: false});}, 3500);
     }
-    setTimeout(() => {this.setState({msgTxt: "", disablePlay: false, botMake: false, canLeave: true}); this.socket.emit('step', "end"); if(this.playingOffline) this.startOffline()}, 3000);
+    setTimeout(() => {this.setState({msgTxt: "", disablePlay: false, botMake: false, hideOthers: false, canLeave: true}); this.socket.emit('step', "end"); if(this.playingOffline) this.startOffline(); this.winningNumbers = []}, 3500);
   }
 
   render() {
@@ -199,40 +223,63 @@ class App extends React.Component {
         );
     } else {
 
-      const opacity = this.fadeVal.interpolate({
-        inputRange: [0, 0.5, 1],
-        outputRange: [1, 0, 1]
-      })
-
       const Anim = Animated.createAnimatedComponent(FlatList);
 
       const letMove = () => {
         if(this.state.next == this.props.language.you || this.state.next == this.props.name) {
-         return <Animated.Text style={styles.queue}>{this.props.language.nextStep}, {this.state.queue}</Animated.Text>
+          if(this.state.hideOthers) return;
+          return <Animated.Text style={styles.queue}>{this.props.language.nextStep}, {this.state.queue}</Animated.Text>
         }
       }
 
+      let cellVal = this.cellsOpacity.interpolate({
+        inputRange: [0, 0.5, 1],
+        outputRange: [0, 0.5, 1],
+      });
+
       return (
         <View key="main" style={styles.container}>
-        <Animated.View style={[styles.winnerPanel, {transform: [{translateY: this.winnerPanelVal}]}]}></Animated.View>
+        <Animated.View style={[styles.winnerPanel, {transform: [{translateY: this.winnerPanelVal}]}]}>
+          <View style={{marginTop: 20, flex: 1, justifyContent: 'center', alignItems: 'center'}}><Animated.Text style={[styles.panelText, {transform: [{translateY: this.winTextVal}]}]}>{this.state.msgTxt}</Animated.Text></View>
+          </Animated.View>
         <View style={styles.playingField}>                    
         <Text key="titleText" style={styles.title}>{this.props.language.appName}</Text>
 
         <Anim
         key="gridList"
         data={this.state.field}
-        renderItem={({item}) =>  <Cell item={item} checkStep={this.checkStep}/>}
+        renderItem={({item}) => {
+
+          let setAnimationOpprt = () => {
+            if(this.winningNumbers.indexOf(item.id-1) != -1) return [styles.button, {opacity: cellVal}];
+            return styles.button
+          }
+
+          return <TouchableOpacity 
+                   onPress={() => {this.checkStep(item.id)}}
+                   key={`cell${item.id}`}
+                   color='#fff'>
+
+                <Animated.View style={setAnimationOpprt()}>
+                    <Text style={{color: '#000', fontSize: 36, fontWeight: '600', textAlign: 'center'}}>{item.title}</Text>
+                </Animated.View>
+            </TouchableOpacity>
+        }}
         keyExtractor={({item}, index) => index}
         numColumns={3}
         />
         {letMove()} 
-           
+
         </View>        
         </View>
         )
     }
   }
-
+// if(this.winningNumbers.indexOf(item.id-1) != -1) {
+//             return <Cell item={item} access={false} style={this.cellsOpacity} checkStep={this.checkStep}/>
+//           } else {
+//             return <Cell item={item} access={true} style={this.cellsOpacity} checkStep={this.checkStep}/>
+//           }}}
   checkStep(num, obj, player) {
     let success = true;
     let a = [];
@@ -277,6 +324,7 @@ class App extends React.Component {
      this.setState({field: a});
      if(this.playingOffline) {
       this.startFade("X");
+      this.winningNumbers = [0,1,2];
     } else {
       this.socket.emit('alertAboutEnd', "X", a)
     }
@@ -285,6 +333,7 @@ class App extends React.Component {
    this.setState({field: a});
    if(this.playingOffline) {
     this.startFade("X");
+    this.winningNumbers = [0,3,6];
   } else {
     this.socket.emit('alertAboutEnd', "X", a)
   }   
@@ -293,6 +342,7 @@ class App extends React.Component {
  this.setState({field: a});
  if(this.playingOffline) {
   this.startFade("X");
+  this.winningNumbers = [1,4,7];
 } else {
   this.socket.emit('alertAboutEnd', "X", a)
 }   return;
@@ -300,6 +350,7 @@ class App extends React.Component {
  this.setState({field: a});
  if(this.playingOffline) {
   this.startFade("X");
+  this.winningNumbers = [2,5,8];
 } else {
   this.socket.emit('alertAboutEnd', "X", a)
 }   return;
@@ -307,6 +358,7 @@ class App extends React.Component {
  this.setState({field: a});
  if(this.playingOffline) {
   this.startFade("X");
+  this.winningNumbers = [3,4,5];
 } else {
   this.socket.emit('alertAboutEnd', "X", a)
 }   return;
@@ -314,6 +366,7 @@ class App extends React.Component {
  this.setState({field: a});
  if(this.playingOffline) {
   this.startFade("X");
+  this.winningNumbers = [6,7,8];
 } else {
   this.socket.emit('alertAboutEnd', "X", a)
 }   return;
@@ -321,6 +374,7 @@ class App extends React.Component {
  this.setState({field: a});
  if(this.playingOffline) {
   this.startFade("X");
+  this.winningNumbers = [0,4,8];
 } else {
   this.socket.emit('alertAboutEnd', "X", a)
 }   return;
@@ -328,6 +382,7 @@ class App extends React.Component {
  this.setState({field: a});
  if(this.playingOffline) {
   this.startFade("X");
+  this.winningNumbers = [6,4,2];
 } else {
   this.socket.emit('alertAboutEnd', "X", a)
 }   return;
@@ -337,6 +392,7 @@ if(a[0].title == "O" && a[1].title == "O" && a[2].title == "O") {
  this.setState({field: a});
  if(this.playingOffline) {
   this.startFade("O");
+  this.winningNumbers = [0,1,2];
 } else {
   this.socket.emit('alertAboutEnd', "O", a)
 }  return;
@@ -344,6 +400,7 @@ if(a[0].title == "O" && a[1].title == "O" && a[2].title == "O") {
  this.setState({field: a});
  if(this.playingOffline) {
   this.startFade("O");
+  this.winningNumbers = [0,3,6];
 } else {
   this.socket.emit('alertAboutEnd', "O", a)
 }  return;
@@ -351,6 +408,7 @@ if(a[0].title == "O" && a[1].title == "O" && a[2].title == "O") {
  this.setState({field: a});
  if(this.playingOffline) {
   this.startFade("O");
+  this.winningNumbers = [1,4,7];
 } else {
   this.socket.emit('alertAboutEnd', "O", a)
 }  return;
@@ -358,6 +416,7 @@ if(a[0].title == "O" && a[1].title == "O" && a[2].title == "O") {
  this.setState({field: a});
  if(this.playingOffline) {
   this.startFade("O");
+  this.winningNumbers = [2,5,8];
 } else {
   this.socket.emit('alertAboutEnd', "O", a)
 }  return;
@@ -365,6 +424,7 @@ if(a[0].title == "O" && a[1].title == "O" && a[2].title == "O") {
  this.setState({field: a});
  if(this.playingOffline) {
   this.startFade("O");
+  this.winningNumbers = [3,4,5];
 } else {
   this.socket.emit('alertAboutEnd', "O", a)
 }  return;
@@ -372,6 +432,7 @@ if(a[0].title == "O" && a[1].title == "O" && a[2].title == "O") {
  this.setState({field: a});
  if(this.playingOffline) {
   this.startFade("O");
+  this.winningNumbers = [6,7,8];
 } else {
   this.socket.emit('alertAboutEnd', "O", a)
 }  return;
@@ -379,6 +440,7 @@ if(a[0].title == "O" && a[1].title == "O" && a[2].title == "O") {
  this.setState({field: a});
  if(this.playingOffline) {
   this.startFade("O");
+  this.winningNumbers = [0,4,8];
 } else {
   this.socket.emit('alertAboutEnd', "O", a)
 }  return;
@@ -386,6 +448,7 @@ if(a[0].title == "O" && a[1].title == "O" && a[2].title == "O") {
  this.setState({field: a});
  if(this.playingOffline) {
   this.startFade("O");
+  this.winningNumbers = [6,4,2];
 } else {
   this.socket.emit('alertAboutEnd', "O", a)
 }  return;
@@ -394,6 +457,7 @@ if(a[0].title == "O" && a[1].title == "O" && a[2].title == "O") {
 if(!a.filter((e) => e.title == "").length) {
   if(this.playingOffline) {
     this.startFade("draw", a);
+    this.winningNumbers = [0,1,2,3,4,5,6,7,8];
   } else {
     this.socket.emit('alertAboutEnd', "draw", a)
   } 
@@ -447,7 +511,14 @@ const styles = StyleSheet.create({
     bottom: 0,
     width: "100%",
     height: 250,
-    backgroundColor: "#141"
+    backgroundColor: "#2980b6"
+  },
+  panelText: {
+    position: "absolute",
+    bottom: 0,
+    textAlign: "center",
+    fontSize: 38,
+    color: "#fff"
   },
   playingField: {
     marginTop: 40
@@ -471,14 +542,16 @@ const styles = StyleSheet.create({
     color: "#fff",
     textAlign: "center"
   },
-  exitBtn: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    backgroundColor: "#fff",
-    padding: 7,
-    paddingVertical: 7,
-    margin: 7,
-    borderRadius: 50
+  button: {
+    marginLeft: 5,
+    marginTop: 5,
+    width: 80,
+    borderColor: '#fff',
+    borderRadius: 10,
+    backgroundColor: '#fff',
+    borderWidth: 0.5,
+    maxHeight: 80,
+    height: 80,
+    paddingTop: 20
   }
 });

@@ -94,15 +94,15 @@ class StartingComponent extends React.Component {
         </TouchableOpacity>
 
         <TouchableOpacity onPress={() => { 
-          let lang;
+          let langPos = this.props.enableLanguages.indexOf(this.props.activeLang);
 
-          if(this.props.activeLang == "eng") {
-            lang = 'rus'
+          if(this.props.enableLanguages.length-1 == langPos) {
+            langPos = 0
           } else {
-            lang = "eng"
+            langPos += 1
           }
 
-          this.props.changeLang(lang) 
+          this.props.changeLang(this.props.enableLanguages[langPos]) 
         }} style={styles.buttonContainer}>
         <Text style={styles.buttonText}>{this.props.activeLang[0].toUpperCase() + this.props.activeLang.slice(1)}</Text>
         </TouchableOpacity>
@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
     marginBottom: 40,
     textAlign: 'center'
   },
-  buttonContainer:{
+  buttonContainer:{   
     backgroundColor: '#2980b6',
     padding: 15,
     marginBottom: 10,

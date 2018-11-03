@@ -23,27 +23,31 @@ websocket.on('connection', (socket) => {
 	usersList[socket.id] = {id: socket.id}; 
 
 	socket.on('step', (data) => {
-		if(roomList[usersList[socket.id].room].queue == "X") {
-			roomList[usersList[socket.id].room].queue = "O"
-		} else {
-			roomList[usersList[socket.id].room].queue = "X"
-		}
-
-		if(data == 'end') {
-			websocket.to(usersList[socket.id].room).emit('endGame', defaultArr);
-			return;
-		}
-
-		let nameOfNext;
-		if(usersList[roomList[usersList[socket.id].room].users[0]].name != roomList[usersList[socket.id].room].next) {
-			nameOfNext = usersList[roomList[usersList[socket.id].room].users[0]].name;
-			roomList[usersList[socket.id].room].next = usersList[roomList[usersList[socket.id].room].users[0]].name;
-		} else {
-			nameOfNext = usersList[roomList[usersList[socket.id].room].users[1]].name;
-			roomList[usersList[socket.id].room].next = usersList[roomList[usersList[socket.id].room].users[1]].name;
-		}
-
-		websocket.to(usersList[socket.id].room).emit('callbackBoutStep', data, roomList[usersList[socket.id].room].queue, nameOfNext)
+		try {
+			if(roomList[usersList[socket.id].room].queue == "X") {
+					roomList[usersList[socket.id].room].queue = "O"
+				} else {
+					roomList[usersList[socket.id].room].queue = "X"
+				}
+		
+				if(data == 'end') {
+					websocket.to(usersList[socket.id].room).emit('endGame', defaultArr);
+					return;
+				}
+		
+				let nameOfNext;
+				if(usersList[roomList[usersList[socket.id].room].users[0]].name != roomList[usersList[socket.id].room].next) {
+					nameOfNext = usersList[roomList[usersList[socket.id].room].users[0]].name;
+					roomList[usersList[socket.id].room].next = usersList[roomList[usersList[socket.id].room].users[0]].name;
+				} else {
+					nameOfNext = usersList[roomList[usersList[socket.id].room].users[1]].name;
+					roomList[usersList[socket.id].room].next = usersList[roomList[usersList[socket.id].room].users[1]].name;
+				}
+		
+				websocket.to(usersList[socket.id].room).emit('callbackBoutStep', data, roomList[usersList[socket.id].room].queue, nameOfNext)
+			} catch(ex) {
+				console.log(ex)
+			}
 	})
 
 	socket.on('alertAboutEnd', (data, obj) => {

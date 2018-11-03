@@ -1,6 +1,6 @@
 export default {
 	userName: "",
-	enableLanguages: ['eng','rus'],
+	enableLanguages: ['eng','rus','ukr'],
 	activeLang: "eng",
 	languageSettings: {
 		"eng": {
@@ -31,6 +31,21 @@ export default {
 			draw: "Ничья",
 			winner: "Победитель",
 			you: "Ты",
+			bot: "Бот"
+		},
+		"ukr": {
+			appName: "Крестики&Нолики",
+			multiPlayer: "Мультиплеєр",
+			singlePlayer: "Одиночна игра",
+			waitingText: "Почекайте",
+			weSeeking: "Ми шукаєм...",
+			cancelSeekBtn: "Скасувати",
+			name: "Ім'я",
+			player: "Гравець",
+			nextStep: "Твій хід",
+			draw: "Нічия",
+			winner: "Переможець",
+			you: "Ти",
 			bot: "Бот"
 		}
 	}
