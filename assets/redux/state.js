@@ -4,6 +4,7 @@ export default {
 	activeLang: "eng",
 	languageSettings: {
 		"eng": {
+			languageName: "English",
 			appName: "Times&Nulles",
 			multiPlayer: "MultiPlayer",
 			singlePlayer: "SinglePlayer",
@@ -19,6 +20,7 @@ export default {
 			bot: "Bot"
 		},
 		"rus": {
+			languageName: "Русский",
 			appName: "Крестики&Нолики",
 			multiPlayer: "Мультиплеер",
 			singlePlayer: "Одиночная игра",
@@ -34,9 +36,10 @@ export default {
 			bot: "Бот"
 		},
 		"ukr": {
-			appName: "Крестики&Нолики",
+			languageName: "Українська",
+			appName: "Хрестики&Нолики",
 			multiPlayer: "Мультиплеєр",
-			singlePlayer: "Одиночна игра",
+			singlePlayer: "Одиночна гра",
 			waitingText: "Почекайте",
 			weSeeking: "Ми шукаєм...",
 			cancelSeekBtn: "Скасувати",

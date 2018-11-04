@@ -17,7 +17,7 @@ export default class Cell extends React.Component {
                    color='#fff'>
 
                 <Animated.View style={setAnimationOpprt()}>
-                    <Text style={{color: '#000', fontSize: 36, fontWeight: '600', textAlign: 'center'}}>{item.title}</Text>
+                    <Animated.Text style={{color: '#000', fontSize: 36, fontWeight: '600', textAlign: 'center',opacity: this.props.style}}>{item.title}</Animated.Text>
                 </Animated.View>
             </TouchableOpacity>)
 	}

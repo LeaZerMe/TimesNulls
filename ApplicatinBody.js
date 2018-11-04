@@ -5,7 +5,7 @@ import SocketIOClient from 'socket.io-client';
 import StartingComponent from './StartingComponent.js'
 import checkField from "./assets/checkingFunction.js"
 import { connect } from 'react-redux';
-import { changeName } from './assets/redux/reducer.js'
+import { changeName, changeActiveLanguage } from './assets/redux/reducer.js'
 import { BoxShadow } from 'react-native-shadow'
 
 const defaultArr = [{id: 1, title: ""},{id: 2, title: ""},{id: 3, title: ""},
@@ -210,7 +210,7 @@ class App extends React.Component {
     if(this.playingOffline) {
       setTimeout(() => {this.setState({msgTxt: ""}); this.setState({field: defaultArr, queue: "X"}); this.setState({disablePlay: false});}, 3500);
     }
-    setTimeout(() => {this.setState({msgTxt: "", disablePlay: false, botMake: false, hideOthers: false, canLeave: true}); this.socket.emit('step', "end"); if(this.playingOffline) this.startOffline(); this.winningNumbers = []}, 3500);
+    setTimeout(() => {this.setState({msgTxt: "", disablePlay: false, botMake: false, hideOthers: false, canLeave: true}); this.socket.emit('step', "end"); if(this.playingOffline) {this.startOffline(); this.winningNumbers = []}}, 3500);
   }
 
   render() {
@@ -275,11 +275,7 @@ class App extends React.Component {
         )
     }
   }
-// if(this.winningNumbers.indexOf(item.id-1) != -1) {
-//             return <Cell item={item} access={false} style={this.cellsOpacity} checkStep={this.checkStep}/>
-//           } else {
-//             return <Cell item={item} access={true} style={this.cellsOpacity} checkStep={this.checkStep}/>
-//           }}}
+
   checkStep(num, obj, player) {
     let success = true;
     let a = [];
@@ -323,8 +319,8 @@ class App extends React.Component {
     if(a[0].title == "X" && a[1].title == "X" && a[2].title == "X") {
      this.setState({field: a});
      if(this.playingOffline) {
-      this.startFade("X");
       this.winningNumbers = [0,1,2];
+      this.startFade("X");
     } else {
       this.socket.emit('alertAboutEnd', "X", a)
     }
@@ -332,8 +328,8 @@ class App extends React.Component {
   } else if(a[0].title == "X" && a[3].title == "X" && a[6].title == "X") {
    this.setState({field: a});
    if(this.playingOffline) {
-    this.startFade("X");
     this.winningNumbers = [0,3,6];
+    this.startFade("X");
   } else {
     this.socket.emit('alertAboutEnd', "X", a)
   }   
@@ -341,48 +337,48 @@ class App extends React.Component {
 } else if(a[1].title == "X" && a[4].title == "X" && a[7].title == "X") {
  this.setState({field: a});
  if(this.playingOffline) {
-  this.startFade("X");
   this.winningNumbers = [1,4,7];
+  this.startFade("X");
 } else {
   this.socket.emit('alertAboutEnd', "X", a)
 }   return;
 } else if(a[2].title == "X" && a[5].title == "X" && a[8].title == "X") {
  this.setState({field: a});
  if(this.playingOffline) {
-  this.startFade("X");
   this.winningNumbers = [2,5,8];
+  this.startFade("X");
 } else {
   this.socket.emit('alertAboutEnd', "X", a)
 }   return;
 } else if(a[3].title == "X" && a[4].title == "X" && a[5].title == "X") {
  this.setState({field: a});
  if(this.playingOffline) {
-  this.startFade("X");
   this.winningNumbers = [3,4,5];
+  this.startFade("X");
 } else {
   this.socket.emit('alertAboutEnd', "X", a)
 }   return;
 } else if(a[6].title == "X" && a[7].title == "X" && a[8].title == "X") {
  this.setState({field: a});
  if(this.playingOffline) {
-  this.startFade("X");
   this.winningNumbers = [6,7,8];
+  this.startFade("X");
 } else {
   this.socket.emit('alertAboutEnd', "X", a)
 }   return;
 } else if(a[0].title == "X" && a[4].title == "X" && a[8].title == "X") {
  this.setState({field: a});
  if(this.playingOffline) {
-  this.startFade("X");
   this.winningNumbers = [0,4,8];
+  this.startFade("X");
 } else {
   this.socket.emit('alertAboutEnd', "X", a)
 }   return;
 } else if(a[6].title == "X" && a[4].title == "X" && a[2].title == "X") {
  this.setState({field: a});
  if(this.playingOffline) {
-  this.startFade("X");
   this.winningNumbers = [6,4,2];
+  this.startFade("X");
 } else {
   this.socket.emit('alertAboutEnd', "X", a)
 }   return;
@@ -391,64 +387,64 @@ class App extends React.Component {
 if(a[0].title == "O" && a[1].title == "O" && a[2].title == "O") {
  this.setState({field: a});
  if(this.playingOffline) {
-  this.startFade("O");
   this.winningNumbers = [0,1,2];
+  this.startFade("O");
 } else {
   this.socket.emit('alertAboutEnd', "O", a)
 }  return;
 } else if(a[0].title == "O" && a[3].title == "O" && a[6].title == "O") {
  this.setState({field: a});
  if(this.playingOffline) {
-  this.startFade("O");
   this.winningNumbers = [0,3,6];
+  this.startFade("O");
 } else {
   this.socket.emit('alertAboutEnd', "O", a)
 }  return;
 } else if(a[1].title == "O" && a[4].title == "O" && a[7].title == "O") {
  this.setState({field: a});
  if(this.playingOffline) {
-  this.startFade("O");
   this.winningNumbers = [1,4,7];
+  this.startFade("O");
 } else {
   this.socket.emit('alertAboutEnd', "O", a)
 }  return;
 } else if(a[2].title == "O" && a[5].title == "O" && a[8].title == "O") {
  this.setState({field: a});
  if(this.playingOffline) {
-  this.startFade("O");
   this.winningNumbers = [2,5,8];
+  this.startFade("O");
 } else {
   this.socket.emit('alertAboutEnd', "O", a)
 }  return;
 } else if(a[3].title == "O" && a[4].title == "O" && a[5].title == "O") {
  this.setState({field: a});
  if(this.playingOffline) {
-  this.startFade("O");
   this.winningNumbers = [3,4,5];
+  this.startFade("O");
 } else {
   this.socket.emit('alertAboutEnd', "O", a)
 }  return;
 } else if(a[6].title == "O" && a[7].title == "O" && a[8].title == "O") {
  this.setState({field: a});
  if(this.playingOffline) {
-  this.startFade("O");
   this.winningNumbers = [6,7,8];
+  this.startFade("O");
 } else {
   this.socket.emit('alertAboutEnd', "O", a)
 }  return;
 } else if(a[0].title == "O" && a[4].title == "O" && a[8].title == "O") {
  this.setState({field: a});
  if(this.playingOffline) {
-  this.startFade("O");
   this.winningNumbers = [0,4,8];
+  this.startFade("O");
 } else {
   this.socket.emit('alertAboutEnd', "O", a)
 }  return;
 } else if(a[6].title == "O" && a[4].title == "O" && a[2].title == "O") {
  this.setState({field: a});
  if(this.playingOffline) {
-  this.startFade("O");
   this.winningNumbers = [6,4,2];
+  this.startFade("O");
 } else {
   this.socket.emit('alertAboutEnd', "O", a)
 }  return;
@@ -456,8 +452,8 @@ if(a[0].title == "O" && a[1].title == "O" && a[2].title == "O") {
 
 if(!a.filter((e) => e.title == "").length) {
   if(this.playingOffline) {
-    this.startFade("draw", a);
     this.winningNumbers = [0,1,2,3,4,5,6,7,8];
+    this.startFade("draw", a);
   } else {
     this.socket.emit('alertAboutEnd', "draw", a)
   } 
@@ -491,7 +487,8 @@ let mapStateToProps = state => {
 
 let mapDispachToProps = dispatch => {
   return {
-    changeName: name => dispatch(changeName(name))
+    changeName: name => dispatch(changeName(name)),
+    changeLang: lang => dispatch(changeActiveLanguage(lang))
   }
 }
 

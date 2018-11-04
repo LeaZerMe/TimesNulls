@@ -15,101 +15,117 @@ class StartingComponent extends React.Component {
       spinner: false
     }
 
-    this.goBack = this.goBack.bind(this)
-  }
+    let getData = async () => {
+      try {
+        const name = await AsyncStorage.getItem('name');
+        const lang = await AsyncStorage.getItem('activeLang');
+        if (name !== null) {
+          this.props.changeName(name); 
+        }
+        if(lang !== null) {
+          this.props.changeLang(lang)
+        }
+      } catch (error) {
+     // Error retrieving data
+   }
+ }
 
-  goBack() {
-    if(this.state.seeking) {
-      this.setState({seeking: false});
-      this.props.socket.emit('cancelSeekGame');
-      return true;
-    }
+ getData();
+ this.goBack = this.goBack.bind(this)
+}
 
-    return false;
-  }
-
-  componentDidMount() {
-    BackHandler.addEventListener('hardwareBackPress', this.goBack);
-  }
-
-  componentWillUnmount() {
-    BackHandler.removeEventListener('hardwareBackPress', this.goBack);
-  }
-
-  start() {
-    this.setState({seeking: true});
-    this.props.socket.emit('startSeekGame', this.name);
-  }
-
-  cancel() {
+goBack() {
+  if(this.state.seeking) {
     this.setState({seeking: false});
     this.props.socket.emit('cancelSeekGame');
+    return true;
   }
 
-  startOffline() {
-    this.props.botOn();
+  return false;
+}
+
+componentDidMount() {
+  BackHandler.addEventListener('hardwareBackPress', this.goBack);
+}
+
+componentWillUnmount() {
+  BackHandler.removeEventListener('hardwareBackPress', this.goBack);
+}
+
+start() {
+  this.setState({seeking: true});
+  this.props.socket.emit('startSeekGame', this.name);
+}
+
+cancel() {
+  this.setState({seeking: false});
+  this.props.socket.emit('cancelSeekGame');
+}
+
+startOffline() {
+  this.props.botOn();
+}
+
+render() {
+  let name, inputName;
+  if(!this.props.name) {
+    name = this.props.language.name
+    inputName = this.props.language.player
+  } else {
+    name = this.props.name
+    inputName = this.props.name
   }
 
-  render() {
-    let name, inputName;
-    if(!this.props.name) {
-      name = this.props.language.name
-      inputName = this.props.language.player
-    } else {
-      name = this.props.name
-      inputName = this.props.name
-    }
+  if(this.state.seeking) {
+    return (<View style={styles.container}>
+     <Text style={styles.waitText}>{this.props.language.waitingText}, {inputName}. {this.props.language.weSeeking}</Text>
+     <ActivityIndicator size="large" color="#fff"/>
 
-    if(this.state.seeking) {
-      return (<View style={styles.container}>
-       <Text style={styles.waitText}>{this.props.language.waitingText}, {inputName}. {this.props.language.weSeeking}</Text>
-       <ActivityIndicator size="large" color="#fff"/>
+     <TouchableOpacity onPress={this.cancel.bind(this)} style={{backgroundColor: '#2980b6', padding: 10, marginHorizontal: 75, marginTop: 40, borderRadius: 40}}>
+     <Text style={styles.buttonText}>{this.props.language.cancelSeekBtn}</Text>
+     </TouchableOpacity>
 
-       <TouchableOpacity onPress={this.cancel.bind(this)} style={{backgroundColor: '#2980b6', padding: 10, marginHorizontal: 75, marginTop: 40, borderRadius: 40}}>
-       <Text style={styles.buttonText}>{this.props.language.cancelSeekBtn}</Text>
-       </TouchableOpacity>
+     </View>)
+  } else {
 
-       </View>)
-    } else {
+    return (<View style={styles.parentElement}>
+      <View style={styles.container}>
+      <Text style={{textAlign: 'center', fontSize: 34, color: "#fff", marginBottom: 45}}>{this.props.language.appName}</Text>
 
-      return (<View style={styles.parentElement}>
-        <View style={styles.container}>
-        <Text style={{textAlign: 'center', fontSize: 34, color: "#fff", marginBottom: 45}}>{this.props.language.appName}</Text>
-        
-        <TextInput onChangeText={(text) => {
-          this.props.changeName(text)
-        }} 
-        style={styles.textInputs}
-        placeholderTextColor="#E2E2E2"
-        placeholder={name}
-        selectTextOnFocus={true}
-        ></TextInput>
-        
-        <TouchableOpacity onPress={this.start.bind(this)} style={styles.buttonContainer}>
-        <Text style={styles.buttonText}>{this.props.language.multiPlayer}</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity onPress={this.startOffline.bind(this)} style={styles.buttonContainer}>
-        <Text style={styles.buttonText}>{this.props.language.singlePlayer}</Text>
-        </TouchableOpacity>
+      <TextInput onChangeText={(text) => {
+        this.props.changeName(text)
+      }} 
+      style={styles.textInputs}
+      placeholderTextColor="#E2E2E2"
+      value={name}
+      selectTextOnFocus={true}
+      ></TextInput>
 
-        <TouchableOpacity onPress={() => { 
-          let langPos = this.props.enableLanguages.indexOf(this.props.activeLang);
+      <TouchableOpacity onPress={this.start.bind(this)} style={styles.buttonContainer}>
+      <Text style={styles.buttonText}>{this.props.language.multiPlayer}</Text>
+      </TouchableOpacity>
 
-          if(this.props.enableLanguages.length-1 == langPos) {
-            langPos = 0
-          } else {
-            langPos += 1
-          }
+      <TouchableOpacity onPress={this.startOffline.bind(this)} style={styles.buttonContainer}>
+      <Text style={styles.buttonText}>{this.props.language.singlePlayer}</Text>
+      </TouchableOpacity>
 
-          this.props.changeLang(this.props.enableLanguages[langPos]) 
-        }} style={styles.buttonContainer}>
-        <Text style={styles.buttonText}>{this.props.activeLang[0].toUpperCase() + this.props.activeLang.slice(1)}</Text>
-        </TouchableOpacity>
-        </View>
-        </View>)
-    }
+      <TouchableOpacity onPress={() => { 
+        let langPos = this.props.enableLanguages.indexOf(this.props.activeLang);
+
+        if(this.props.enableLanguages.length-1 == langPos) {
+          langPos = 0
+        } else {
+          langPos += 1
+        }
+
+        this.props.changeLang(this.props.enableLanguages[langPos]) 
+      }} style={styles.buttonContainer}>
+      <Text style={styles.buttonText}>{this.props.language.languageName}</Text>
+      </TouchableOpacity>
+      </View>
+      </View>)
   }
+}
 }
 
 let mapStateToProps = state => {
